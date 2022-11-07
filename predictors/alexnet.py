@@ -4,6 +4,8 @@ import torch.nn as nn
 class Alexnet(nn.Module):
     def __init__(self, name, n_outputs=10):
         super(Alexnet, self).__init__()
+        
+        self.calls_made = 0
 
         self.name = name
         self.num_classes = n_outputs
@@ -63,6 +65,8 @@ class Alexnet(nn.Module):
         self.soft = nn.Softmax()
         
     def forward(self, x):
+        self.calls_made += x.shape[0]
+        
         layer1 = self.batch_norm1(self.pad(self.lrn(self.relu(self.conv1(x)))))
         layer2 = self.batch_norm2(self.pad(self.lrn(self.relu(self.conv2(layer1)))))
         layer3 = self.batch_norm3(self.relu(self.conv3(layer2)))

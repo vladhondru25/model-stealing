@@ -97,4 +97,7 @@ def train_or_restore_predictor_adam(
         if os.path.exists(f'./checkpoints/{optimizer_ckpt_path}'):
             os.unlink(f'./checkpoints/{optimizer_ckpt_path}')
         optimizer_ckpt_path = new_checkpoint_path
+        
+        # Check number of calls to teacher
+        print(dataset.teacher.calls_made)
     # os.unlink(f'./checkpoints/{optimizer_ckpt_path}')
