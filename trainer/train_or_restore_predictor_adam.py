@@ -7,6 +7,7 @@ def train_or_restore_predictor_adam(
     model, dataset,
     loss_type = 'categorical',
     n_epochs = 50,
+    calls_limit = 51200
 ):
     model_exists = False
     ckpt_path = f'./checkpoints/{model.name}_state_dict'
@@ -41,6 +42,7 @@ def train_or_restore_predictor_adam(
     has_val = 'val_dataset' in dataset.__dict__
     best_acc = 0.
 
+    stop_training = False
     starting_epoch_n = 0
     if training_was_in_progress:
         starting_epoch_n = int(optimizer_ckpt_path.split('_')[-1])
@@ -62,7 +64,10 @@ def train_or_restore_predictor_adam(
             else:
                 acc = outputs.max(1)[1].eq(targets)
             acc = acc.float().mean().detach().cpu()
-            print(f'{epoch}, {iter_n}, {acc}', end = '\r')
+            print(f'{epoch}, {iter_n}, {acc}. calls = {dataset.teacher.calls_made}', end = '\r')
+            if dataset.teacher.calls_made > calls_limit:
+                stop_training = True
+                break
 
             loss.backward()
             optimizer.step()
@@ -99,5 +104,7 @@ def train_or_restore_predictor_adam(
         optimizer_ckpt_path = new_checkpoint_path
         
         # Check number of calls to teacher
-        print(dataset.teacher.calls_made)
+        print(f'Calls made in epoch {epoch}: {dataset.teacher.calls_made}')
+        if stop_training:
+            break
     # os.unlink(f'./checkpoints/{optimizer_ckpt_path}')

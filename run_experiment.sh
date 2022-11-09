@@ -6,4 +6,5 @@ python3 base_experiment.py --generator cifar_100_90_classes_gan \
                            --size 32 \
                            --student half_alexnet \
                            --teacher alexnet \
-                           --true_dataset cifar10
+                           --true_dataset cifar10 \
+                           --calls_limit 51200

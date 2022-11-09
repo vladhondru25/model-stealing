@@ -15,6 +15,7 @@ if __name__ == '__main__':
     arg_parser.add_argument('--student', type = str, default = 'half_lenet')
     arg_parser.add_argument('--teacher', type = str, default = 'lenet')
     arg_parser.add_argument('--true_dataset', type = str, default = 'split_fmnist')
+    arg_parser.add_argument('--calls_limit', type = int, default = 51200)
 
     env = arg_parser.parse_args()
 
@@ -34,7 +35,7 @@ if __name__ == '__main__':
     else:
         trainer.train_or_restore_predictor_adam(
             student, student_dataset, loss_type = 'binary',
-            n_epochs = int(env.epochs)
+            n_epochs = int(env.epochs), calls_limit = env.calls_limit
         )
     trainer.evaluate(student, teacher_dataset)
 
