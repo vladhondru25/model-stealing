@@ -2,6 +2,7 @@ import numpy as np
 import os
 import setup
 import torch
+import torchvision
 
 def train_or_restore_predictor_adam(
     model, dataset,
@@ -41,6 +42,12 @@ def train_or_restore_predictor_adam(
 
     has_val = 'val_dataset' in dataset.__dict__
     best_acc = 0.
+    
+    gen_dataset_path = 'generated_dataset' 
+    if not os.path.exists(gen_dataset_path):
+        os.makedirs(gen_dataset_path)
+        os.makedirs(os.path.join(gen_dataset_path,'images'))
+    generated_targets = torch.tensor(data=[], dtype=torch.long)
 
     stop_training = False
     starting_epoch_n = 0
@@ -64,6 +71,14 @@ def train_or_restore_predictor_adam(
             else:
                 acc = outputs.max(1)[1].eq(targets)
             acc = acc.float().mean().detach().cpu()
+            
+            #TODO: Save image
+            img_idx = len(os.listdir(os.path.join(gen_dataset_path,'images')))
+            for i in range(len(targets)):
+                torchvision.utils.save_image(tensor=images[i], fp=os.path.join(gen_dataset_path,'images',f'image{img_idx}.png'))
+                img_idx += 1
+            generated_targets = torch.cat(tensors=[generated_targets,targets.cpu()], dim=0)
+            
             print(f'{epoch}, {iter_n}, {acc}. calls = {dataset.teacher.calls_made}', end = '\r')
             if dataset.teacher.calls_made > calls_limit:
                 stop_training = True
@@ -106,5 +121,6 @@ def train_or_restore_predictor_adam(
         # Check number of calls to teacher
         print(f'Calls made in epoch {epoch}: {dataset.teacher.calls_made}')
         if stop_training:
+            torch.save(generated_targets, f=f'{gen_dataset_path}/labels.pt')
             break
     # os.unlink(f'./checkpoints/{optimizer_ckpt_path}')

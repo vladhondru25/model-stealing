@@ -6,7 +6,7 @@ if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(description = 'Experiment setup')
 
     arg_parser.add_argument('--epochs', type = str, default = '200')
-    arg_parser.add_argument('--generator', type = str, default = 'gan')
+    arg_parser.add_argument('--generator', type = str, default = 'cifar_100_90_classes_gan')
     arg_parser.add_argument('--optim', type = str, default = 'adam')
     arg_parser.add_argument('--proxy_dataset', type = str, default = 'cifar10')
     arg_parser.add_argument('--sample_optimization', type = str, default = 'class')
@@ -37,6 +37,10 @@ if __name__ == '__main__':
             student, student_dataset, loss_type = 'binary',
             n_epochs = int(env.epochs), calls_limit = env.calls_limit
         )
+        
+    proxy_dataset_train, proxy_dataset_valid = setup.prepare_proxy_dataset()
+    trainer.train_proxy_dataset(model=student, dataset=(proxy_dataset_train, proxy_dataset_valid), n_epochs=int(env.epochs))
+        
     trainer.evaluate(student, teacher_dataset)
 
 

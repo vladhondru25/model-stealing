@@ -2,11 +2,12 @@ import torch
 import torch.nn as nn
 
 class HalfAlexnet(nn.Module):
-    def __init__(self, name, n_outputs=10):
+    def __init__(self, name, n_outputs=10, return_feature_domain=False):
         super(HalfAlexnet, self).__init__()
 
         self.name = name
         self.num_classes = n_outputs
+        self.return_feature_domain = return_feature_domain
 
         self.conv1 = nn.Conv2d(3, 24, 5, stride=1, padding=2)
         self.conv1.bias.data.normal_(0, 0.01)
@@ -76,4 +77,7 @@ class HalfAlexnet(nn.Module):
         logits = self.fc3(fully2)
         #softmax_val = self.soft(logits)
 
-        return logits
+        if self.return_feature_domain:
+            return logits, layer5
+        else:
+            return logits

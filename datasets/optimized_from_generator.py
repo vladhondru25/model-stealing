@@ -76,9 +76,9 @@ class OptimizedFromGenerator(object):
 
             with torch.no_grad():
                 labels = self.teacher(images)
-                if not self.use_soft_labels:
-                    labels = labels.max(1)[1]
-                else:
+                if self.use_soft_labels:
                     labels = torch.softmax(labels, dim = -1)
+                else:
+                    labels = labels.max(1)[1]
             yield (images, labels)
 

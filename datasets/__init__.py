@@ -10,3 +10,4 @@ from .optimized_from_generator import OptimizedFromGenerator
 from .random_from_generator import RandomFromGenerator
 # from .split_cifar10 import SplitCIFAR10
 from .split_fmnist import SplitFMNIST
+from .proxy import ProxyDataset

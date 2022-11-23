@@ -1,8 +1,11 @@
 import datasets
 import generators
+import os
 import predictors
 import torch
+import torchvision.transforms as T
 import trainer
+from sklearn.model_selection import train_test_split
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
@@ -25,6 +28,7 @@ dataset_dict = {
     'random': datasets.RandomFromGenerator,
     'split_fmnist': datasets.SplitFMNIST,
     # 'two_gans': datasets.TwoGANs,
+    'proxy': datasets.ProxyDataset
 }
 generator_dict = {
     'cifar_10_gan': generators.SNGAN,
@@ -99,6 +103,7 @@ def prepare_generator(env):
 
         return CombinedGenerator(vae, gan)
 
+    print(env.generator)
     generator = generator_dict[env.generator]()
     generator = generator_prepare_dict[env.generator](generator)
 
@@ -109,11 +114,36 @@ def prepare_student_dataset(env, teacher, teacher_dataset, student, generator):
     dataset = dataset_dict[env.samples](
         generator, teacher, student,
         test_dataloader = teacher_dataset.test_dataloader,
-        to_grayscale = ('gan' in env.generator and 'fmnist' in env.true_dataset)
+        to_grayscale = ('gan' in env.generator and 'fmnist' in env.true_dataset),
+        soft_labels = True
     )
 
     return dataset
 
+def prepare_proxy_dataset():
+    gen_dataset_path = 'generated_dataset'
+    proxy_imgs_path = os.path.join(gen_dataset_path,'images')
+            
+    train_transforms = T.Compose([
+        T.Resize((32,32)),
+        T.RandomCrop(32, padding=4),
+        T.RandomHorizontalFlip(p=0.5),
+        T.Normalize((0.5,), (0.5,))
+    ])
+    valid_transforms = T.Compose([
+        T.Resize((32,32)),
+        T.Normalize((0.5,), (0.5,))
+    ])
+    
+    images = os.listdir(proxy_imgs_path)
+    targets = torch.load(f'{gen_dataset_path}/labels.pt')
+    
+    images_train, images_valid, labels_train, labels_valid = train_test_split(images, targets, train_size=0.9)
+
+    proxy_dataset_train = dataset_dict['proxy'](images_train, labels_train, train_transforms)
+    proxy_dataset_valid = dataset_dict['proxy'](images_valid, labels_valid, valid_transforms)
+    
+    return proxy_dataset_train, proxy_dataset_valid
 
 def teacher_name(env):
     return f'teacher_{env.teacher}_for_{env.true_dataset}'

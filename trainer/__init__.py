@@ -7,4 +7,5 @@ from .train_or_restore_cifar_100_40_classes_gan import train_or_restore_cifar_10
 from .train_or_restore_cifar_10_vae import train_or_restore_cifar_10_vae
 from .train_or_restore_cifar_100_6_classes_gan import train_or_restore_cifar_100_6_classes_gan
 from .train_or_restore_cifar_100_10_classes_gan import train_or_restore_cifar_100_10_classes_gan
+from .train_proxy_dataset import train_proxy_dataset
 
