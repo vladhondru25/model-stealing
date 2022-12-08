@@ -6,8 +6,8 @@ from .cifar10 import CIFAR10
 # from .flowers import Flowers
 from .fmnist import FMNIST
 # from .monkey import Monkey
-from .optimized_from_generator import OptimizedFromGenerator
-from .random_from_generator import RandomFromGenerator
+# from .optimized_from_generator import OptimizedFromGenerator
+# from .random_from_generator import RandomFromGenerator
 # from .split_cifar10 import SplitCIFAR10
 from .split_fmnist import SplitFMNIST
 from .proxy import ProxyDataset
