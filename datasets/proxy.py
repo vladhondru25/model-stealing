@@ -28,9 +28,9 @@ class ProxyDataset(Dataset):
         if self.soft_label:
             soft_label = self.soft_label[idx]
         else:
-            soft_label = None
+            soft_label = 0
             
         if self.return_path:
             return image, label, self.images[idx], soft_label
         
-        return image, label, self.soft_label[idx]
+        return image, label, soft_label
