@@ -4,5 +4,5 @@ checkpoints/
 .DS_Store
 images_generated/
 images_db/
-pretrained_student.pt
 temp_models/
+*.pt
