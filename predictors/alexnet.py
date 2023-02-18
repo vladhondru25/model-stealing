@@ -58,7 +58,7 @@ class Alexnet(nn.Module):
         
         self.batch_norm7 = nn.BatchNorm1d(256, eps=0.001)
         
-        self.fc3 = nn.Linear(256,10)
+        self.fc3 = nn.Linear(256,self.num_classes)
         self.fc3.bias.data.normal_(0, 0.01)
         self.fc3.bias.data.fill_(0) 
         

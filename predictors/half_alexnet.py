@@ -57,7 +57,7 @@ class HalfAlexnet(nn.Module):
         
         self.batch_norm7 = nn.BatchNorm1d(128, eps=0.001)
         
-        self.fc3 = nn.Linear(128,10)
+        self.fc3 = nn.Linear(128,self.num_classes)
         self.fc3.bias.data.normal_(0, 0.01)
         self.fc3.bias.data.fill_(0) 
         
