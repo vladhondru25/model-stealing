@@ -91,19 +91,26 @@ def optimize_rescale(classifier, generator, batch_size = 16):
         batch.append(image)
     return torch.cat(batch)#, axis = 0)
 
-def optimize(classifier, generator, batch_size = 64):
+# def optimize(classifier, generator, batch_size = 20):
+def optimize(classifier, generator, batch_size = 10):
     batch = []
 
     n_iter = batch_size
-    encoding_size =256
+    encoding_size = 256
     if 'sngan' in str(type(generator)):
         encoding_size = 128
-    for i in range(n_iter):
+    for i in range(n_iter // 2):
         c = 0.
         x = 0
-        specimens = np.random.uniform(-3.3, 3.3, size = (30, encoding_size))
-        label = np.random.randint(10, size = (1, 1))
-        while c < .9 and x < 300:
+        specimens = np.random.uniform(-3.3, 3.3, size = (2, encoding_size))
+        label = np.random.randint(1, size = (2, 1))
+
+        with torch.no_grad():
+            image = generator(torch.tensor(specimens).float().to(setup.device))
+
+        """
+        # while c < .9 and x < 300:# and classifier.calls_made < 20:
+        for _ in range(2):
             x += 1
             encodings = specimens
             with torch.no_grad():
@@ -119,19 +126,28 @@ def optimize(classifier, generator, batch_size = 64):
                 # images = images * multipliers
                 # images = images.sum(axis = 1, keepdims = True)
 
+                # print(f'Cate imagini sunt: {len(images)}')
                 softmaxes = classifier(images).detach().cpu()
             losses = [loss(np.array(s), i, label) for s, i in zip(softmaxes, images)]
             indexes = np.argsort(losses)
-            image = images[indexes[0]: indexes[0] + 1]
-            specimens = specimens[indexes[:10]]
+            image = images[indexes[0]: indexes[0] + 5]
+            specimens = specimens[indexes[:1]]
             specimens = np.concatenate([
                 specimens,
-                specimens + np.random.normal(scale = .5, size = (10, encoding_size)),
-                specimens + np.random.normal(scale = .5, size = (10, encoding_size))
+                specimens + np.random.normal(scale = .5, size = (1, encoding_size))
             ])
             c = softmaxes[indexes[0]].numpy()
             c = c[label]
+            # break
+        batch.append(images)
+        """
+
         batch.append(image)
+    
+    # print(classifier.calls_made)
+    # print(f'len batch: {len(batch)}')
+    # print(f'len batch: {len(batch[0])}')
+    # print(f'shape: {torch.cat(batch).shape}')
     return torch.cat(batch)#, axis = 0)
 
 

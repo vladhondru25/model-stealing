@@ -24,7 +24,7 @@ class OptimizedFromGenerator(object):
         soft_labels = True,
         device = torch.device('cuda'),
         to_grayscale = True,
-        batch_size = 64,
+        batch_size = 10,
         n_classes = 10,
         input_size = 32
     ):

@@ -1,4 +1,5 @@
 import os
+from torch import tensor
 from torch.utils.data import Dataset
 from torchvision.io import read_image
 
@@ -27,6 +28,7 @@ class ProxyDataset(Dataset):
             
         if self.soft_label:
             soft_label = self.soft_label[idx]
+            soft_label = tensor(soft_label)
         else:
             soft_label = 0
             
