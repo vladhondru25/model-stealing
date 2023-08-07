@@ -1,9 +1,10 @@
-import torch 
+import torch
 import torch.nn as nn
 
-class HalfAlexnetDistil(nn.Module):
+
+class HalfAlexnetDistilAvgP(nn.Module):
     def __init__(self, name, n_outputs=10):
-        super(HalfAlexnetDistil, self).__init__()
+        super(HalfAlexnetDistilAvgP, self).__init__()
 
         self.name = name
         self.num_classes = n_outputs
@@ -43,9 +44,11 @@ class HalfAlexnetDistil(nn.Module):
         self.batch_norm5 = nn.BatchNorm2d(64, eps=0.001)
         
         # Top
-        self.fully_top = nn.Linear(3136,self.num_classes)
+        self.global_pooling = nn.AvgPool2d(7,stride=1)
+        self.batch_norm8 = nn.BatchNorm1d(64, eps=0.001)
+        self.fully_top = nn.Linear(64, self.num_classes)
         self.fully_top.bias.data.normal_(0, 0.01)
-        self.fully_top.bias.data.fill_(0)
+        self.fully_top.bias.data.fill_(0) 
         
         # Bottom
         self.fc1 = nn.Linear(576,256)
@@ -76,8 +79,11 @@ class HalfAlexnetDistil(nn.Module):
         layer5 = self.batch_norm5(self.pad(self.relu(self.conv5(layer4))))
         
         # Top
-        flatten_top = layer2.view(-1, 3136)
-        logits_top = self.fully_top(flatten_top)
+        # flatten_top = layer2.view(-1, 3136)
+        logits_top = self.global_pooling(layer2)
+        logits_top = logits_top.squeeze(-1).squeeze(-1)
+        logits_top = self.batch_norm8(self.relu(logits_top))
+        logits_top = self.fully_top(logits_top)
         
         # Bottom
         flatten_bot = layer5.view(-1, 64*3*3)
@@ -93,12 +99,9 @@ class HalfAlexnetDistil(nn.Module):
     def freeze_bot(self):
         for param in self.parameters():
             param.requires_grad = False
-        # self.fully_top.requires_grad = True
-
-        self.fully_top1.requires_grad = True
-        self.fully_top2.requires_grad = True
+        self.global_pooling.requires_grad = True
         self.batch_norm8.requires_grad = True
-
+        self.fully_top.requires_grad = True
 
     def unfreeze_bot(self):
         for param in self.parameters():

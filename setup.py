@@ -66,6 +66,10 @@ def prepare_teacher_student(env):
         name = student_name(env),
         n_outputs = true_dataset.n_classes
     )
+    # Load student
+    path_to_save = 'pretrained_student.pt'
+    if torch.cuda.is_available():
+        student.load_state_dict(torch.load(path_to_save))
     student.to(device)
 
     return teacher, true_dataset, student
@@ -103,7 +107,6 @@ def prepare_generator(env):
 
         return CombinedGenerator(vae, gan)
 
-    print(env.generator)
     generator = generator_dict[env.generator]()
     generator = generator_prepare_dict[env.generator](generator)
 

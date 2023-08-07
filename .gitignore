@@ -6,3 +6,4 @@ images_generated/
 images_db/
 temp_models/
 *.pt
+*.png
