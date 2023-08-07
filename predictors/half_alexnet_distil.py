@@ -43,21 +43,9 @@ class HalfAlexnetDistil(nn.Module):
         self.batch_norm5 = nn.BatchNorm2d(64, eps=0.001)
         
         # Top
-        self.fc1_top = nn.Linear(3136,576)
-        self.fc1_top.bias.data.normal_(0, 0.01)
-        self.fc1_top.bias.data.fill_(0) 
-        
-        self.batch_norm8 = nn.BatchNorm1d(576, eps=0.001)
-        
-        self.fc2_top = nn.Linear(576,256)
-        self.fc2_top.bias.data.normal_(0, 0.01)
-        self.fc2_top.bias.data.fill_(0) 
-        
-        self.batch_norm9 = nn.BatchNorm1d(256, eps=0.001)
-        
-        self.fc3_top = nn.Linear(256,self.num_classes)
-        self.fc3_top.bias.data.normal_(0, 0.01)
-        self.fc3_top.bias.data.fill_(0) 
+        self.fully_top = nn.Linear(3136,self.num_classes)
+        self.fully_top.bias.data.normal_(0, 0.01)
+        self.fully_top.bias.data.fill_(0)
         
         # Bottom
         self.fc1 = nn.Linear(576,256)
@@ -89,11 +77,7 @@ class HalfAlexnetDistil(nn.Module):
         
         # Top
         flatten_top = layer2.view(-1, 3136)
-        fully1_top = self.relu(self.fc1_top(flatten_top))
-        fully1_top = self.batch_norm8(self.drop(fully1_top))
-        fully2_top = self.relu(self.fc2_top(fully1_top))
-        fully2_top = self.batch_norm9(self.drop(fully2_top))
-        logits_top = self.fc3_top(fully2_top)
+        logits_top = self.fully_top(flatten_top)
         
         # Bottom
         flatten_bot = layer5.view(-1, 64*3*3)
