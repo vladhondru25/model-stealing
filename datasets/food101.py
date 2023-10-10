@@ -5,7 +5,7 @@ import torchvision
 
 class FOOD101(object):
     def __init__(self, input_size = 224):
-        self.n_classes = 10
+        self.n_classes = 101
         transform = transforms.Compose([
             transforms.Resize((input_size,input_size)),
             transforms.ToTensor(),

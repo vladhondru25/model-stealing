@@ -11,9 +11,17 @@ def train_or_restore_predictor_adam(
     calls_limit = 51200
 ):
     model_exists = False
-    ckpt_path = f'./checkpoints/{model.name}_state_dict'
+    if model.name == "teacher_alexnet_food_for_food101":
+        ckpt_path = f'./checkpoints/teacher_food101_alexnet.pt'
+    elif model.name == "teacher_resnet50_for_food101":
+        ckpt_path = f'./checkpoints/teacher_food101_resnet50.pt'
+    else:
+        ckpt_path = f'./checkpoints/{model.name}_state_dict'
     if os.path.exists(ckpt_path) and loss_type != 'binary':
-        model.load_state_dict(torch.load(ckpt_path, map_location = setup.device))
+        if model.name == "teacher_resnet50_for_food101":
+            pass
+        else:          
+            model.load_state_dict(torch.load(ckpt_path, map_location = setup.device))
         model.to(setup.device)
         model_exists = True
 
@@ -67,6 +75,10 @@ def train_or_restore_predictor_adam(
             images = batch[0].to(setup.device)
             targets = batch[1].to(setup.device)
 
+            # print(f'images: {images.shape}')
+            # print(f'targets: {targets.shape}')
+            # print(f'targets: {targets.argmax(1)}')
+
             optimizer.zero_grad()
             outputs = model(images)
 
@@ -92,6 +104,7 @@ def train_or_restore_predictor_adam(
             # print(f'{epoch}, {iter_n}, {acc}. calls = {dataset.teacher.calls_made}', end = '\r')
             # print(f'{epoch}, {iter_n}, {acc}. calls = {dataset.teacher.calls_made}')#, end = '\r')
             # if dataset.teacher.calls_made >= calls_limit * 3 / 2:
+            # print(f"{dataset.teacher.calls_made} from {calls_limit}")
             if dataset.teacher.calls_made >= calls_limit:
                 # print(f'Calls made: {dataset.teacher.calls_made}')
                 stop_training = True

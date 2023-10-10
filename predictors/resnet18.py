@@ -44,10 +44,13 @@ class ResidualBlock(nn.Module):
         return self.activation(z2)
 
 class ResNet18Custom(nn.Module):
-    def __init__(self, name = None, n_outputs=10, return_feature_domain=False):
+    def __init__(self, name=None, n_outputs=10, return_feature_domain=False):
         super(ResNet18Custom, self).__init__()
-
+        self.name = name
+        self.num_classes = n_outputs
         self.return_feature_domain = return_feature_domain
+
+        self.latent_space_size = 512*4*4
         
         self.conv1 = nn.Sequential(
                         nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, padding=1, stride=1, bias=False),
@@ -95,4 +98,39 @@ class ResNet18Custom(nn.Module):
         x = self.pooling(x)
         
         return self.fc(x)
+
+
+class Resnet18Food(nn.Module):
+    def __init__(self, name=None, n_outputs=10) -> None:
+        super().__init__()
+
+        self.calls_made = 0
+        self.name = name
+
+        self.model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
+        num_ftrs = self.model.fc.in_features
+        self.model.fc = torch.nn.Linear(num_ftrs, 101)
+
+    def forward(self, x):
+        self.calls_made += x.shape[0]
+        
+        return self.model(x)
     
+
+class Resnet50Food(nn.Module):
+    def __init__(self, name=None, n_outputs=10) -> None:
+        super().__init__()
+
+        self.calls_made = 0
+        self.name = name
+
+        self.model = models.resnet50(weights=None)
+        self.model.fc = torch.nn.Linear(in_features=2048, out_features=101)
+
+        ckpt_path = 'checkpoints/teacher_food101_resnet50.pt'
+        self.model.load_state_dict(torch.load(ckpt_path, map_location='cuda'))
+
+    def forward(self, x):
+        self.calls_made += x.shape[0]
+        
+        return self.model(x)

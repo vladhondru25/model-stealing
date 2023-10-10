@@ -3,7 +3,7 @@ sys.path.append('..')
 
 # from itertools import product
 # from torch.multiprocessing import Pool, Process, set_start_method
-from torch_optimizer import optimize, optimize_to_grayscale
+from torch_optimizer import optimize, optimize_to_grayscale, optimize_rescale
 import numpy as np
 import time
 import torch
@@ -39,8 +39,10 @@ class OptimizedFromGenerator(object):
 
     def train_dataloader(self, *args, **kwargs):
         optimization = optimize_to_grayscale if self.to_grayscale else optimize
+        optimization = optimize_rescale
         for _ in range(1000):
             if 'combined' in str(type(self.generator)).lower():
+                raise ValueError("Don't pass thorugh here")
                 # with Pool(4) as p:
                 #     first_images = torch.cat(
                 #         p.starmap(

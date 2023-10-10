@@ -19,6 +19,36 @@ if __name__ == '__main__':
 
     env = arg_parser.parse_args()
 
+    for _ in range(5):
+        # for power in range(13):
+        for power in range(0,11):
+            calls_limit = 101 * (2**power)
+
+            teacher, teacher_dataset, student = setup.prepare_teacher_student(env)
+
+            # trainer.evaluate(teacher, teacher_dataset)
+            generator = setup.prepare_generator(env)
+
+            student_dataset = setup.prepare_student_dataset(
+                env, teacher, teacher_dataset, student, generator
+            )
+
+            if env.optim == 'sgd':
+                trainer.train_or_restore_predictor(
+                    student, student_dataset, loss_type = 'binary',
+                    n_epochs = int(env.epochs)
+                )
+            else:
+                trainer.train_or_restore_predictor_adam(
+                    student, student_dataset, loss_type = 'binary',
+                    n_epochs = int(env.epochs),
+                    calls_limit=calls_limit
+                )
+            trainer.evaluate(student, teacher_dataset, calls_limit)
+            print()
+        print()
+
+    """ Original code
     teacher, teacher_dataset, student = setup.prepare_teacher_student(env)
     trainer.evaluate(teacher, teacher_dataset)
     generator = setup.prepare_generator(env)
@@ -42,5 +72,6 @@ if __name__ == '__main__':
     trainer.train_proxy_dataset(model=student, dataset=(proxy_dataset_train, proxy_dataset_valid), n_epochs=int(env.epochs))
         
     trainer.evaluate(student, teacher_dataset)
+    """
 
 

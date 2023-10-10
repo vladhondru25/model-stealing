@@ -7,6 +7,7 @@ class HalfAlexnet(nn.Module):
 
         self.name = name
         self.num_classes = n_outputs
+        self.latent_space_size = 64*3*3
         self.return_feature_domain = return_feature_domain
 
         self.conv1 = nn.Conv2d(3, 24, 5, stride=1, padding=2)
@@ -89,6 +90,7 @@ class HalfAlexnetFood(nn.Module):
 
         self.name = name
         self.num_classes = n_outputs
+        self.latent_space_size = 64*8*8
         self.return_feature_domain = return_feature_domain
 
         self.conv1 = nn.Conv2d(3, 24, 5, stride=4, padding=2)
@@ -171,6 +173,7 @@ class HalfAlexnet2(nn.Module):
         self.name = name
         self.num_classes = n_outputs
         self.return_feature_domain = return_feature_domain
+        self.latent_space_size = 64*3*3
 
         self.conv1 = nn.Conv2d(3, 24, 5, stride=1, padding=2)
         self.conv1.bias.data.normal_(0, 0.01)

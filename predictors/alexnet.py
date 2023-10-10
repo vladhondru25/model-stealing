@@ -90,6 +90,7 @@ class AlexnetFood(nn.Module):
         self.name = name
         self.num_classes = n_outputs
         self.return_feature_domain = return_feature_domain
+        self.calls_made = 0
 
         self.conv1 = nn.Conv2d(3, 48, 5, stride=4, padding=2)
         self.conv1.bias.data.normal_(0, 0.01)
@@ -146,6 +147,8 @@ class AlexnetFood(nn.Module):
         self.soft = nn.Softmax()
         
     def forward(self, x):
+        self.calls_made += x.shape[0]
+        
         layer1 = self.batch_norm1(self.pad(self.lrn(self.relu(self.conv1(x)))))
         layer2 = self.batch_norm2(self.pad(self.lrn(self.relu(self.conv2(layer1)))))
         layer3 = self.batch_norm3(self.relu(self.conv3(layer2)))

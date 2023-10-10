@@ -10,6 +10,7 @@ from tqdm import tqdm, trange
 from torch.nn import Module
 from torch.nn.functional import softmax
 from torch.utils.data import Dataset
+from torchvision.models import resnet50, ResNet50_Weights, resnet18, ResNet18_Weights
 
 from predictors.alexnet import Alexnet, AlexnetFood
 from predictors.half_alexnet import HalfAlexnet, HalfAlexnet2, HalfAlexnetFood
@@ -77,19 +78,28 @@ def get_teacher(device) -> Alexnet:
     # Teacher
     teacher_model = Alexnet(name=None, n_outputs=10)
 
-    ckpt_path = 'checkpoints/teacher_alexnet_for_cifar10_state_dict'
+    ckpt_path = 'checkpoints/teacher_alexnet_for_cifar10_state_dict.pt'
     teacher_model.load_state_dict(torch.load(ckpt_path, map_location=device))
+    sys.exit(0)
 
     teacher_model.eval()
     teacher_model = teacher_model.to(device)
 
     return teacher_model
 
-def get_teacher_food(device) -> AlexnetFood:
+def get_teacher_food(device, teacher) -> AlexnetFood:
     # Teacher
-    teacher_model = AlexnetFood(name=None, n_outputs=101)
+    if teacher == "alexnet":
+        teacher_model = AlexnetFood(name=None, n_outputs=101)
 
-    ckpt_path = 'checkpoints/teacher_food101.pt'
+        ckpt_path = 'checkpoints/teacher_food101_alexnet.pt'
+    elif teacher == "resnet50":
+        teacher_model = resnet50(weights=None)
+        teacher_model.fc = torch.nn.Linear(in_features=2048, out_features=101)
+
+        ckpt_path = 'checkpoints/teacher_food101_resnet50.pt'
+    else:
+        raise ValueError("Wrong teacher name for Food101")
     teacher_model.load_state_dict(torch.load(ckpt_path, map_location=device))
 
     teacher_model.eval()
@@ -115,13 +125,21 @@ def get_student(student_name, device):
         student_model = HalfAlexnetFood(name=None, n_outputs=101)
 
         path_to_save = 'half_alex_net_food101.pt'
+    elif student_name == "resnet_food":
+        student_model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+        student_model.num_classes = 101        
+        student_model.latent_space_size = 512 * 4 * 4
+
+        num_ftrs = student_model.fc.in_features
+        student_model.fc = torch.nn.Linear(num_ftrs, 101)
     else:
         raise Exception('No student model found')
 
-    if torch.cuda.is_available():
-        student_model.load_state_dict(torch.load(path_to_save))
-    else:
-        student_model.load_state_dict(torch.load(path_to_save, map_location ='cpu'))
+    if student_name != "resnet_food":
+        if torch.cuda.is_available():
+            student_model.load_state_dict(torch.load(path_to_save))
+        else:
+            student_model.load_state_dict(torch.load(path_to_save, map_location ='cpu'))
 
     student_model.to(device)
 
@@ -159,10 +177,15 @@ def read_dataset(dataset_path, label_mapper,
 
 def split_data(num_examples, random_seed, use_all_data, classes_train_dataset, images_train_dataset, labels_train_dataset, soft_labels_train_dataset, 
                 num_classes=10, return_og_labels=False):
+    train_size = num_examples*num_classes
+    if num_classes == 101:
+        if num_examples > 800:
+            train_size = 800*101
+
     # Do a stratified split of the data
     train_images, unused_images, train_labels, unused_labels, train_soft_labels, unused_soft_labels, _, unused_classes = \
         train_test_split(images_train_dataset, labels_train_dataset, soft_labels_train_dataset, classes_train_dataset,
-                         train_size=num_examples*num_classes, stratify=classes_train_dataset, random_state=random_seed)  
+                         train_size=train_size, stratify=classes_train_dataset, random_state=random_seed)  
 
     if not use_all_data:
         if len(unused_images) > len(train_images):
@@ -173,7 +196,7 @@ def split_data(num_examples, random_seed, use_all_data, classes_train_dataset, i
     if return_og_labels:
         return train_images, train_labels, train_soft_labels, unused_images, unused_labels, unused_soft_labels, unused_classes
 
-    return train_images, train_labels, train_soft_labels, unused_images, unused_labels, unused_soft_labels
+    return train_images, train_labels, train_soft_labels, unused_images, unused_labels, unused_soft_labels, unused_classes
 
 def start_training(student_model, optimizer, steplr, criterion, early_stopping, device, train_dataloader, valid_dataloader, epochs, 
                    writer=None, use_mixup=False) -> None:
@@ -187,12 +210,12 @@ def start_training(student_model, optimizer, steplr, criterion, early_stopping, 
         # Training loop
         student_model.train()
         training_loss_epoch = []
-        for x,y,soft_y in loop:
+        for batch in loop:
             optimizer.zero_grad()
             
-            x = x.to(device=device)
-            y = y.to(device=device)
-            soft_y = soft_y.to(device=device)
+            x = batch['image'].to(device=device)
+            y = batch['hard_label'].to(device=device)
+            soft_y = batch['soft_label'].to(device=device)
 
             mixup_prob = np.random.rand()
             if use_mixup and mixup_prob >= 0.5:
@@ -240,9 +263,10 @@ def start_training(student_model, optimizer, steplr, criterion, early_stopping, 
         validation_loss_epoch = []  
         acc = 0
         with torch.no_grad():
-            for x,y,_ in tqdm(valid_dataloader, desc='Validating', leave=False):
-                x = x.to(device=device)
-                y = y.to(device=device)
+            for batch in tqdm(valid_dataloader, desc='Validating', leave=False):
+                x = batch['image'].to(device=device)
+                y = batch['hard_label'].to(device=device)
+                
             
                 logits = student_model(x)
                 pred = softmax(logits, dim=1)
@@ -347,14 +371,20 @@ def start_evaluation_teacher_gt(teacher_model, student_model, criterion, device,
 
     return 100*acc/len(true_dataset.test_dataset)
 
-def build_db(student_model, device, train_dataloader, return_soft, images_db, labels_db):
+def build_db(student_model, device, train_dataloader, return_soft, images_db, labels_db, student_name=None, activation=None):
     # Create the database
     student_model.eval()
     with torch.no_grad():
-        for x,y,soft_y in train_dataloader:
-            x = x.to(device=device)
+        for batch in train_dataloader:
+            x = batch['image'].to(device=device)
+            y = batch['hard_label']
+            soft_y = batch['soft_label']
 
-            _,latent_fm = student_model(x)
+            if student_name == "resnet_food":
+                _ = student_model(x)
+                latent_fm = activation['latent_space']
+            else:
+                _,latent_fm = student_model(x)
 
             for i in range(latent_fm.shape[0]):
                 images_db.append(latent_fm[i])
@@ -364,7 +394,7 @@ def build_db(student_model, device, train_dataloader, return_soft, images_db, la
                     labels_db.append(y[i])
 
 def save_results(filename, num_examples, acc_before, acc_after):
-    with open(f'experiments/{filename}', 'a') as log_file:
+    with open(f'experiments2/{filename}', 'a') as log_file:
         log_file.write(f'{num_examples},{acc_before},{acc_after}\n')
 
 def mixup_data(x, y, alpha=1.0):

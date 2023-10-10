@@ -7,16 +7,23 @@ import torchvision.transforms as T
 import trainer
 from sklearn.model_selection import train_test_split
 
+from big_gan.pytorch_pretrained_biggan import (BigGAN, one_hot_from_names, truncated_noise_sample, save_as_images, display_in_terminal)
+
+
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 predictor_dict = {
     'half_lenet': predictors.HalfLeNet,
     'inceptionv3': predictors.InceptionV3,
     'lenet': predictors.LeNet,
-    'resnet18': predictors.ResNet18,
+    'resnet18': predictors.ResNet18Custom,
     'vgg': predictors.VGG,
     'alexnet': predictors.Alexnet,
-    'half_alexnet': predictors.HalfAlexnet
+    'half_alexnet': predictors.HalfAlexnet,
+    'alexnet_food': predictors.AlexnetFood,
+    'half_alexnet_food': predictors.HalfAlexnetFood,
+    'resnet_food': predictors.Resnet18Food,    
+    'resnet50': predictors.Resnet50Food,
 }
 dataset_dict = {
     'cifar10': datasets.CIFAR10,
@@ -28,11 +35,13 @@ dataset_dict = {
     'random': datasets.RandomFromGenerator,
     'split_fmnist': datasets.SplitFMNIST,
     # 'two_gans': datasets.TwoGANs,
-    'proxy': datasets.ProxyDataset
+    'proxy': datasets.ProxyDataset,
+    'food101': datasets.FOOD101,
 }
 generator_dict = {
     'cifar_10_gan': generators.SNGAN,
     'cifar_100_90_classes_gan': generators.SNGAN,
+    # 'cifar_100_90_classes_gan': BigGAN,
     'cifar_100_40_classes_gan': generators.SNGAN,
     'cifar_10_vae': generators.VAE,
     'cifar_100_6_classes_gan': generators.Progan,
@@ -68,7 +77,9 @@ def prepare_teacher_student(env):
     )
     # Load student
     path_to_save = 'pretrained_student.pt'
-    if torch.cuda.is_available():
+    path_to_save = 'checkpoints/resnet18_pretrained_cifar10.pth'
+    path_to_save = 'half_alex_net_food101.pt'
+    if torch.cuda.is_available() and env.student != "resnet_food":
         student.load_state_dict(torch.load(path_to_save))
     student.to(device)
 
@@ -107,7 +118,7 @@ def prepare_generator(env):
 
         return CombinedGenerator(vae, gan)
 
-    generator = generator_dict[env.generator]()
+    generator = generator_dict[env.generator]()#.from_pretrained('biggan-deep-256')
     generator = generator_prepare_dict[env.generator](generator)
 
     return generator

@@ -7,7 +7,7 @@ from .food101 import FOOD101
 # from .flowers import Flowers
 from .fmnist import FMNIST
 # from .monkey import Monkey
-# from .optimized_from_generator import OptimizedFromGenerator
+from .optimized_from_generator import OptimizedFromGenerator
 from .random_from_generator import RandomFromGenerator
 # from .split_cifar10 import SplitCIFAR10
 from .split_fmnist import SplitFMNIST

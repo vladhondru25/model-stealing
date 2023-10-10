@@ -31,8 +31,10 @@ class ProxyDataset(Dataset):
             soft_label = tensor(soft_label)
         else:
             soft_label = 0
-            
-        if self.return_path:
-            return image, label, self.images[idx], soft_label
-        
-        return image, label, soft_label
+    
+        return {
+            "image": image,
+            "image_path": self.images[idx],
+            "hard_label": label,
+            "soft_label": soft_label
+        }
