@@ -1,8 +1,0 @@
-NO_IMGS_TO_USE = 4096
-Final score for k=1: 22479 / 47104, acc = 0.47722061820652173
-Final score for k=2: 23644 / 47104, acc = 0.501953125
-Final score for k=3: 23651 / 47104, acc = 0.5021017323369565
-Final score for k=4: 23919 / 47104, acc = 0.5077912703804348
-Final score for k=5: 23933 / 47104, acc = 0.5080884850543478
-Final score for k=6: 23969 / 47104, acc = 0.5088527513586957
-Final score for k=7: 23855 / 47104, acc = 0.5064325747282609

@@ -32,3 +32,11 @@ food101_classes.txt
 cifar-10-python.tar.gz
 OpenSans-Light.ttf
 *14_active*
+
+# Black-Box Ripper specifics
+datasets/optimized_from_generator.py
+datasets/random_from_generator.py
+generators/
+base_experiment.py
+run_experiment.sh
+torch_optimizer.py
