@@ -34,6 +34,7 @@ OpenSans-Light.ttf
 *14_active*
 
 # Black-Box Ripper specifics
+trainer/
 datasets/optimized_from_generator.py
 datasets/random_from_generator.py
 generators/
