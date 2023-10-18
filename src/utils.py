@@ -80,7 +80,6 @@ def get_teacher(device) -> Alexnet:
 
     ckpt_path = 'checkpoints/teacher_alexnet_for_cifar10_state_dict.pt'
     teacher_model.load_state_dict(torch.load(ckpt_path, map_location=device))
-    sys.exit(0)
 
     teacher_model.eval()
     teacher_model = teacher_model.to(device)
@@ -111,24 +110,20 @@ def get_student(student_name, device):
     if student_name == 'half_alexnet':
         student_model = HalfAlexnet(name=None, n_outputs=10)
 
-        path_to_save = 'pretrained_student.pt'
-    elif student_name == 'half_alexnet2':
-        # For active learning
-        student_model = HalfAlexnet2(name=None, n_outputs=10)
-
-        path_to_save = 'pretrained_student.pt'
+        path_to_save = 'checkpoints/student_half_alexet_cifar10.pt'
     elif student_name == 'resnet':
         student_model = ResNet18Custom(name=None, n_outputs=10)
 
-        path_to_save = 'checkpoints/resnet18_pretrained_cifar10.pth'
+        path_to_save = 'checkpoints/student_resnet18_cifar10.pth'
     elif student_name == 'half_alexnet_food':
         student_model = HalfAlexnetFood(name=None, n_outputs=101)
 
-        path_to_save = 'half_alex_net_food101.pt'
+        path_to_save = 'checkpoints/student_half_alexnet_food101.pt'
     elif student_name == "resnet_food":
         student_model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
-        student_model.num_classes = 101        
-        student_model.latent_space_size = 512 * 4 * 4
+        student_model.num_classes = 101    
+        student_model.latent_space_size = 512 * 7 * 7
+
 
         num_ftrs = student_model.fc.in_features
         student_model.fc = torch.nn.Linear(num_ftrs, 101)

@@ -1,54 +1,31 @@
-## Black-Box Ripper: Copying black-box models using generative evolutionary algorithms - NIPS 2020 - Official Implementation
+## Towards Few-Call Model Stealing via Active Self-Paced Knowledge Distillation and Diffusion-Based Image Generation  - Official Implementation
 
 ### Setup
 Install requirements
 
-``` pip install -r requirements.txt```
+``` pip install -r requirements.txt ```
 
-Download pretrained models using:
- ```bash download_checkpoints.sh```
-
-
-### Table 1 experiments - Experiments having CIFAR10 as true dataset
-
-```python base_experiment.py --true_dataset cifar10 --teacher alexnet --student half_alexnet --generator cifar_100_6_classes_gan```
-
-```python base_experiment.py --true_dataset cifar10 --teacher alexnet --student half_alexnet --generator cifar_100_10_classes_gan```
-
-```python base_experiment.py --true_dataset cifar10 --teacher alexnet --student half_alexnet --generator cifar_100_40_classes_gan```
-
-```python base_experiment.py --true_dataset cifar10 --teacher alexnet --student half_alexnet --generator cifar_100_90_classes_gan```
-
-### Table 2 experiments - Experiments having Fashion-MNIST as true dataset
-
-```python base_experiment.py --true_dataset split_fmnist --teacher lenet --student half_lenet --generator cifar_10_gan```
-
-```python base_experiment.py --true_dataset split_fmnist --teacher lenet --student half_lenet --generator cifar_10_vae```
-
-```python base_experiment.py --true_dataset fmnist --teacher vgg --student vgg --generator cifar_10_gan --optim sgd --epochs 50```
-
-```python base_experiment.py --true_dataset fmnist --teacher vgg --student vgg --generator cifar_10_vae --optim sgd --epochs 50```
+If you want access to our pretrained models (teachers - trained on the true datasets, and students - trained on TinyImagenet200), please download them using:
+ ``` bash download_checkpoints.sh ```
 
 
-### Table 3 Experiments - Monkey Species as true dataset
+### Models
+We provide the implementation for our method from the paper, along with the models we used for the experiments. These are:
+Students:
+    - HalfAlexNet
+    - Resnet18
+Teachers:
+    - AlexNet
+    - Resnet18
+    - Resnet50
 
-The 10 Monkey Species dataset for the teacher is found at:
 
-```https://www.kaggle.com/slothkong/10-monkey-species```
+### Experiments can then be run, as follows:
+1. Create the proxy dataset using any diffusion model.
+2. Add the images in a follder called "images_generated_DATASET_NAME" (you can change DATASET_NAME as you please). The folder structure should be: 2 folders (train and valid) that contains subfolder named after the class with the respective images, as well as 2 json files that contain the labels.
+3. Run the following command:
 
-For CelebA-HQ as proxy, we used the PGAN from torch.hub:
+```python start_experiment.py --epochs 200 --batch_size 64 --lr 0.001 --step_size 20 --dataset DATASET_NAME --student resnet --teacher alexnet --use_soft_labels True --use_active_learning True --use_og_labels True --distance cosine --use_all_data True ```
 
-```
-def celeba_gan():
-    model = torch.hub.load('facebookresearch/pytorch_GAN_zoo:hub',
-        'PGAN',
-        model_name='celebAHQ-512',
-        pretrained = True,
-        useGPU = True
-    )
-    return model
-```
-
-For ImageNet-Cats-and-Dogs, we used the SNGAN-Projection found at:
-
-```https://github.com/pfnet-research/sngan_projection```
+### Acknowledgements
+Our work was based on "Black-Box Ripper: Copying black-box models using generative evolutionary algorithms". We forked from their repository, which is available here: https://github.com/antoniobarbalau/black-box-ripper.

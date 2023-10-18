@@ -11,7 +11,7 @@ from src.utils import *
 
 def active_learning_step(student_model, total_examples, label_mapper, device,
                          images_train_dataset, classes_train_dataset, labels_train_dataset, soft_labels_train_dataset,
-                         valid_images, valid_labels, valid_soft_labels):
+                         valid_images, valid_labels, valid_soft_labels, activation=None):
     collected_images, collected_labels, collected_soft_labels = [], [], []
 
     if student_model.num_classes == 101 and total_examples > 800:
@@ -46,11 +46,15 @@ def active_learning_step(student_model, total_examples, label_mapper, device,
                 batch['image'] = batch['image'].to(device=device)
                 batch['hard_label'] = batch['hard_label'].to(device=device)
 
-                logits, fc2 = student_model(batch['image']) # shape -> (batch,128), pt resnet (512, 4, 4)
+                if activation != None:
+                    _ = student_model(batch['image'])
+                    fc2 = activation['latent_space']
+                else:
+                    _, fc2 = student_model(batch['image']) # shape -> (batch,128), pt resnet (512, 4, 4)
                 fc2 = fc2.view(fc2.size(0), -1)
                 
                 # Compute mean
-                batch_size = logits.size(0)
+                batch_size = batch['image'].size(0)
                 num_classes = student_model.num_classes
                 indices = torch.stack((
                     batch['hard_label'],

@@ -118,6 +118,7 @@ for _ in range(args.no_runs):
 
 
             student_model.avgpool.register_forward_hook(get_activation('latent_space'))
+
         # Define optimizer
         optimizer = torch.optim.Adam(student_model.parameters(), lr=LR)
         steplr = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.step_size, gamma=0.95)        
@@ -132,7 +133,7 @@ for _ in range(args.no_runs):
             unused_images, unused_labels, unused_soft_labels, unused_classes = \
                 al.active_learning_step(student_model, num_examples, label_mapper, device,
                          images_train_dataset, classes_train_dataset, labels_train_dataset, soft_labels_train_dataset,
-                         valid_images, valid_labels, valid_soft_labels)
+                         valid_images, valid_labels, valid_soft_labels, activation)
         else:
             train_images, train_labels, train_soft_labels, \
             unused_images, unused_labels, unused_soft_labels, unused_classes = \

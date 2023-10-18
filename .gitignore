@@ -7,6 +7,7 @@ images_generated/
 images_db/
 temp_models/
 *.pt
+*.pth
 *.png
 *.jpg
 *.jpeg
@@ -32,6 +33,8 @@ food101_classes.txt
 cifar-10-python.tar.gz
 OpenSans-Light.ttf
 *14_active*
+
+venv/
 
 # Black-Box Ripper specifics
 trainer/
